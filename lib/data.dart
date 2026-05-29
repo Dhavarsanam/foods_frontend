@@ -57,4 +57,4 @@ void rebuildTables(int count) {
 final TableData orderTable = TableData(0, '0');
 
 /// Each confirmed order bill history
-final List<Map<String, dynamic>> orderBillHistory = [];
+final List<Map<String, dynamic>> orderBillHistory = []; //
