@@ -885,6 +885,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   // ── Tables Page ──────────────────────────────────────────────────────────
   Widget _buildTablesPage(int activeTables) {
+    // Responsive aspect ratio: taller cards on small phones so the sub-table
+    // chips + active badge never overflow on Redmi / Realme / Vivo / Oppo etc.
+    final double w = MediaQuery.of(context).size.width;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -896,8 +899,12 @@ class _HomeScreenState extends State<HomeScreen>
           child: GridView.builder(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             itemCount: tables.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, mainAxisSpacing: 14, crossAxisSpacing: 14, childAspectRatio: 0.88,
+            // NOTE: `const` removed here because childAspectRatio now reads MediaQuery.
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: w < 380 ? 0.72 : 0.82,
             ),
             itemBuilder: (context, index) {
               final table = tables[index];
@@ -1303,6 +1310,13 @@ class _TableCard extends StatelessWidget {
     final int totalUsage = table.usageCount + subTables.fold<int>(0, (s, t) => s + t.usageCount);
     final activeSubCount = subTables.where((s) => s.isOccupied).length;
 
+    // Responsive sizing for small Android devices (Redmi / Realme / Vivo / Oppo etc.)
+    final double w = MediaQuery.of(context).size.width;
+    final bool isSmall = w < 380;
+    final double pad = isSmall ? 12 : 16;
+    final double iconBox = isSmall ? 46 : 54;
+    final double iconSize = isSmall ? 24 : 28;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -1321,30 +1335,45 @@ class _TableCard extends StatelessWidget {
           )],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(pad),
           child: Column(
+            // mainAxisSize.min -> column only takes the height it needs (no vertical overflow)
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(width: 54, height: 54,
+              Container(width: iconBox, height: iconBox,
                   decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.75), borderRadius: BorderRadius.circular(16)),
-                  child: Icon(Icons.table_restaurant_rounded, size: 28, color: isActive ? theme.activeIconColor : theme.iconColor.withValues(alpha: 0.90))),
-              const SizedBox(height: 10),
-              Text("Table " + table.tableLabel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A))),
+                  child: Icon(Icons.table_restaurant_rounded, size: iconSize, color: isActive ? theme.activeIconColor : theme.iconColor.withValues(alpha: 0.90))),
+              SizedBox(height: isSmall ? 8 : 10),
+
+              // FittedBox keeps the title from forcing the card wider
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text("Table " + table.tableLabel,
+                    maxLines: 1,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A))),
+              ),
               const SizedBox(height: 5),
+
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.78), borderRadius: BorderRadius.circular(20)),
                 child: Text("₹" + totalRevenue.toStringAsFixed(0), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: isActive ? theme.amountColor : const Color(0xFF999999))),
               ),
               const SizedBox(height: 5),
+
               Text("Used " + totalUsage.toString() + "×", style: const TextStyle(fontSize: 11, color: Color(0xFF777777), fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              SizedBox(height: isSmall ? 6 : 8),
+
+              // Wrap -> sub-table chips (1A, 1B…) flow to the next line instead of
+              // overflowing horizontally outside the card.
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 4,
+                runSpacing: 4,
                 children: subTables.map((sub) {
                   final bool subOccupied = sub.isOccupied;
                   return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: subOccupied ? theme.activeIconColor : Colors.white.withValues(alpha: 0.60),
@@ -1355,6 +1384,7 @@ class _TableCard extends StatelessWidget {
                   );
                 }).toList(),
               ),
+
               if (isActive) ...[
                 const SizedBox(height: 6),
                 Container(

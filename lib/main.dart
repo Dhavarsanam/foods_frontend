@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'screens/splash_screen.dart';
+import 'services/api_service.dart';
 
 // ── Global theme notifier — listen anywhere in the app ──────────────────────
 final ValueNotifier<ThemeMode> appThemeNotifier = ValueNotifier(ThemeMode.light);
@@ -18,6 +19,8 @@ Color get thBorder   => isDarkMode ? const Color(0xFF3A3A3A) : const Color(0xFFE
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  ApiService.warmUp(); // Server wake up
 
   final prefs = await SharedPreferences.getInstance();
   final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;

@@ -7,7 +7,7 @@ List<Item> menu = [
   Item("Onion Oothappam", 25,  image: "assets/images/OnionOothappam.png"),
 
   // 🥞 Dosa Varieties
-  Item("Dosa",            30,  image: "assets/images/dosa.png"),
+  Item("Dosa",            30,  image: "assets/images/Dosa.png"),
   Item("Special Dosa",    30,  image: "assets/images/Specialdosa.png"),
   Item("Podi Dosa",       30,  image: "assets/images/Podidosa.png"),
   Item("Plain Dosa",      30,  image: "assets/images/Plaindosa.png"),
